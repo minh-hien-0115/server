@@ -31,7 +31,7 @@ const register = asyncHandle(async (req, res) => {
 
     res.status(200).json({
         message: 'Create user successfully!!!',
-        data: { ...newUser, accesstoken: await getJsonWebToken(email, newUser.id) },
+        data: { email: newUser.email, id: newUser.id, accesstoken: await getJsonWebToken(email, newUser.id) },
     });
 });
 
