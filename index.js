@@ -1,20 +1,22 @@
 // const e = require('cors');
 const express = require('express');
 const cors = require('cors');
-
+const authRouter = require('./routers/authRouter');
 const app = express();
+
 app.use(cors());
+app.use(express.json());
 
 const PORT = 3001;
 
-app.get('/auth/hello', (_req, res) => {
-  res.send('<h1>Hello World</h1>');
-});
+app.use('/auth', authRouter)
 
 app.listen(PORT, (err) => {
   if (err) {
     console.error(err);
-  } else {
-    console.log(`Server starting at http://localhost:${PORT}`);
+    return;
   }
+  
+  console.log(`Server starting at http://localhost:${PORT}`);
+  
 })
