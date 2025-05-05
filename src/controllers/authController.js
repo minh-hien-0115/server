@@ -8,7 +8,7 @@ const getJsonWebToken = async (email, id) => {
         email,
         id,
     }
-    const token = jwt.sign(payload, process.env.SECRET_KEY, {expiresIn: '7d'});
+    const token = jwt.sign(payload, process.env.SECRET_KEY, { expiresIn: '7d' });
     return token;
 }
 
@@ -35,6 +35,35 @@ const register = asyncHandle(async (req, res) => {
     });
 });
 
+const login = asyncHandle( async (req, res) => {
+    const {email, password} = req.body;
+    
+    const existingUser = await UserModel.findOne({email})
+    if(!existingUser) {
+        res.status(403).json({
+            message: 'Người dùng không tồn tại!!!'
+        })
+        throw new Error("Người dùng không tồn tại");
+        
+    }
+
+    const isMatchPassword = await bcrypt.compare(password, existingUser.password)
+
+    if (!isMatchPassword) {
+        res.status(401)
+        throw new Error("Email hoặc Password không đúng!");
+    }
+    res.status(200).json({
+        message: 'Đăng ký thành công',
+        data: {
+            id: existingUser.id,
+            email: existingUser.email,
+            accesstoken: await getJsonWebToken(email, existingUser.id),
+        }
+    })
+})
+
 module.exports = {
     register,
+    login,
 }
