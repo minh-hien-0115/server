@@ -26,21 +26,6 @@ const UserSchema = new mongoose.Schema({
         type: Date,
         default: Date.now(),
     },
-    // phoneNumber: {
-    //     type: String,
-    //     required: true,
-    //     unique: true,
-    // },
-    // address: {
-    //     type: String,
-    //     required: true,
-    // },
-    // role: {
-    //     type: String,
-    //     enum: ["admin", "user"],
-    //     default: "user",
-    // },
-    // }, { timestamps: true, versionKey: false
 });
 
 const UserModel = mongoose.model("users", UserSchema);

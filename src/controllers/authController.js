@@ -15,23 +15,31 @@ const getJsonWebToken = async (email, id) => {
 const register = asyncHandle(async (req, res) => {
     const { username, email, password } = (req.body);
     const existingUser = await UserModel.findOne({ email });
+    
     if (existingUser) {
         res.status(401)
-        throw new Error("Email already exists!!!");
+        throw new Error("Email đã tồn tại!!!");
     }
 
     const salt = await bcrypt.genSalt(10);
+    
     const hashedPassword = await bcrypt.hash(password, salt);
+    
     const newUser = new UserModel({
         username: username ?? '',
         email,
         password: hashedPassword,
     });
+    
     await newUser.save();
 
     res.status(200).json({
-        message: 'Create user successfully!!!',
-        data: { email: newUser.email, id: newUser.id, accesstoken: await getJsonWebToken(email, newUser.id) },
+      message: "Tạo mới tài khoản thành công!!!",
+      data: {
+        email: newUser.email,
+        id: newUser.id,
+        accesstoken: await getJsonWebToken(email, newUser.id),
+      },
     });
 });
 
@@ -39,11 +47,12 @@ const login = asyncHandle( async (req, res) => {
     const {email, password} = req.body;
     
     const existingUser = await UserModel.findOne({email})
+
     if(!existingUser) {
         res.status(403).json({
             message: 'Người dùng không tồn tại!!!'
         })
-        throw new Error("Người dùng không tồn tại");
+        throw new Error('Người dùng không tồn tại');
         
     }
 
@@ -51,10 +60,10 @@ const login = asyncHandle( async (req, res) => {
 
     if (!isMatchPassword) {
         res.status(401)
-        throw new Error("Email hoặc Password không đúng!");
+        throw new Error("Email hoặc Mật khẩu không đúng!");
     }
     res.status(200).json({
-        message: 'Đăng ký thành công',
+        message: 'Đăng nhập thành công',
         data: {
             id: existingUser.id,
             email: existingUser.email,
