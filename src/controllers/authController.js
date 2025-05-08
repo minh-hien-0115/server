@@ -24,29 +24,28 @@ const getJsonWebToken = async (email, id) => {
     return token;
 }
 
-const verificationCode = Math.round(1000 + Math.random() * 9000)
 const handleSendMail = async (val, email) => {
     // const verificationCode = Math.round(1000 + Math.random() * 9000)
     // try {
     //     await transporter.sendMail({
-        //     from: `AppChat <${process.env.USERNAME_EMAIL}>`,
-        //     to: email,
-        //     subject: "Yêu cầu xác thực",
-        //     html: `
-        //     <div style="max-width:600px;margin:0 auto;padding:20px;font-family:sans-serif;border:1px solid #ddd;border-radius:10px;">
-        //       <h2 style="color:#4A90E2;">Mã xác nhận AppChat</h2>
-        //       <p>Chào bạn,</p>
-        //       <p>Chúng tôi đã nhận được yêu cầu xác thực tài khoản của bạn. Mã xác nhận này có thể được sử dụng để xác thực tài khoản của bạn.</p>
-        //       <p>Vui lòng sử dụng mã bên dưới để hoàn tất đăng ký:</p>
-        //       <div style="font-size:28px; font-weight:bold; margin:20px 0; padding:10px; background:#f0f0f0; border-radius:8px; text-align:center; letter-spacing:4px;">
-        //         ${verificationCode}
-        //       </div>
-        //       <p>Mã xác thực này chỉ có hiệu lực trong 60 giây.</p>
-        //       <p>Nếu bạn không yêu cầu, vui lòng bỏ qua email này.</p>
-        //       <hr />
-        //       <p style="font-size:12px;color:#888;">AppChat - Ứng dụng nhắn tin bảo mật</p>
-        //     </div>
-        //   `,
+    //     from: `AppChat <${process.env.USERNAME_EMAIL}>`,
+    //     to: email,
+    //     subject: "Yêu cầu xác thực",
+    //     html: `
+    //     <div style="max-width:600px;margin:0 auto;padding:20px;font-family:sans-serif;border:1px solid #ddd;border-radius:10px;">
+    //       <h2 style="color:#4A90E2;">Mã xác nhận AppChat</h2>
+    //       <p>Chào bạn,</p>
+    //       <p>Chúng tôi đã nhận được yêu cầu xác thực tài khoản của bạn. Mã xác nhận này có thể được sử dụng để xác thực tài khoản của bạn.</p>
+    //       <p>Vui lòng sử dụng mã bên dưới để hoàn tất đăng ký:</p>
+    //       <div style="font-size:28px; font-weight:bold; margin:20px 0; padding:10px; background:#f0f0f0; border-radius:8px; text-align:center; letter-spacing:4px;">
+    //         ${verificationCode}
+    //       </div>
+    //       <p>Mã xác thực này chỉ có hiệu lực trong 60 giây.</p>
+    //       <p>Nếu bạn không yêu cầu, vui lòng bỏ qua email này.</p>
+    //       <hr />
+    //       <p style="font-size:12px;color:#888;">AppChat - Ứng dụng nhắn tin bảo mật</p>
+    //     </div>
+    //   `,
     //     });
 
     //     console.log("Email đã gửi đến:", email, "với mã:", verificationCode);
@@ -89,12 +88,12 @@ const handleSendMail = async (val, email) => {
 }
 
 const verification = asyncHandle(async (req, res) => {
-    const {email} = req.body;
+    const { email } = req.body;
     const verificationCode = Math.round(1000 + Math.random() * 9000)
 
     try {
         const data = {
-			from: `AppChat <${process.env.USERNAME_EMAIL}>`,
+            from: `AppChat <${process.env.USERNAME_EMAIL}>`,
             to: email,
             subject: "Yêu cầu xác thực",
             html: `
@@ -112,24 +111,24 @@ const verification = asyncHandle(async (req, res) => {
               <p style="font-size:12px;color:#888;">AppChat - Ứng dụng nhắn tin bảo mật</p>
             </div>
           `,
-		};
+        };
 
-		await handleSendMail(data);
+        await handleSendMail(data);
 
-		res.status(200).json({
-			message: 'Send verification code successfully!!!',
-			data: {
-				code: verificationCode,
-			},
-		});
+        res.status(200).json({
+            message: 'Send verification code successfully!!!',
+            data: {
+                code: verificationCode,
+            },
+        });
     } catch (error) {
         res.status(401);
-		throw new Error('Can not send email');
+        throw new Error('Can not send email');
     }
 
     // const { email } = req.body;
     // // const verificationCode = Math.round(1000 + Math.random() * 9000)
-    
+
     // try {
     //     await handleSendMail(verificationCode, email)
     //     res.status(200).json({
@@ -155,7 +154,6 @@ const register = asyncHandle(async (req, res) => {
     }
 
     const salt = await bcrypt.genSalt(10);
-
     const hashedPassword = await bcrypt.hash(password, salt);
 
     const newUser = new UserModel({
@@ -205,8 +203,72 @@ const login = asyncHandle(async (req, res) => {
     })
 })
 
+const forgotPassword = asyncHandle(async (req, res) => {
+    const { email } = req.body;
+    const randomPassword = Math.round(100000 + Math.random() * 999000);
+
+    // Tìm người dùng trong cơ sở dữ liệu
+    const user = await UserModel.findOne({ email });
+
+    if (user) {
+        // Nếu người dùng tồn tại, thực hiện các bước tiếp theo (tạo mật khẩu mới và gửi email)
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(`${randomPassword}`, salt);
+
+        try {
+            // Cập nhật mật khẩu mới cho người dùng
+            await UserModel.findByIdAndUpdate(user._id, {
+                password: hashedPassword, isChangePassword: true,
+            })
+
+
+            // Tạo nội dung email với mật khẩu mới
+            const data = {
+              from: `AppChat <${process.env.USERNAME_EMAIL}>`,
+              to: email,
+              subject: "Mật khẩu mới",
+              html: `
+                <div style="max-width:600px;margin:0 auto;padding:20px;font-family:sans-serif;border:1px solid #ddd;border-radius:10px;">
+                  <h2 style="color:#4A90E2;">Mật khẩu mới</h2>
+                  <p>Chào bạn,</p>
+                  <p>Chúng tôi đã nhận được yêu cầu đổi mật khẩu của bạn. Mật khẩu này được sử dụng để đăng nhập vào ứng dụng của bạn.</p>
+                  <p>Vui lòng sử dụng mật khẩu bên dưới để đăng nhập vào ứng dụng:</p>
+                  <div style="font-size:28px; font-weight:bold; margin:20px 0; padding:10px; background:#f0f0f0; border-radius:8px; text-align:center; letter-spacing:4px;">
+                    ${randomPassword}
+                  </div>
+                  <p>Nếu bạn không yêu cầu, vui lòng bỏ qua email này.</p>
+                  <hr />
+                  <p style="font-size:12px;color:#888;">AppChat - Ứng dụng nhắn tin bảo mật</p>
+                </div>
+                `,
+            };
+
+            // Gửi email thông báo mật khẩu mới
+            await handleSendMail(data)
+
+            // Phản hồi thành công
+            res.status(200).json({
+                message: "Mật khẩu mới đã được gửi đến email của bạn thành công",
+                data: [],
+            });
+        } catch (error) {
+            // Xử lý lỗi nếu có
+            res.status(500).json({
+                message: 'Không thể gửi email',
+                data: [],
+            });
+        }
+    } else {
+        // Nếu người dùng không tồn tại
+        res.status(401).json({
+            message: "Người dùng không tồn tại",
+        });
+    }
+});
+
 module.exports = {
     register,
     login,
-    verification
+    verification,
+    forgotPassword
 }
