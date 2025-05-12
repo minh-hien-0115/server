@@ -24,8 +24,7 @@ const getJsonWebToken = async (email, id) => {
     return token;
 }
 
-const handleSendMail = async (val, email) => {
-    // const verificationCode = Math.round(1000 + Math.random() * 9000)
+// const verificationCode = Math.round(1000 + Math.random() * 9000)
     // try {
     //     await transporter.sendMail({
     //     from: `AppChat <${process.env.USERNAME_EMAIL}>`,
@@ -79,6 +78,7 @@ const handleSendMail = async (val, email) => {
     //     console.log("Không thể gửi Email")
     // }
 
+const handleSendMail = async (val, email) => {
     try {
         await transporter.sendMail(val)
         return 'OK'
@@ -207,22 +207,16 @@ const forgotPassword = asyncHandle(async (req, res) => {
     const { email } = req.body;
     const randomPassword = Math.round(100000 + Math.random() * 999000);
 
-    // Tìm người dùng trong cơ sở dữ liệu
     const user = await UserModel.findOne({ email });
 
     if (user) {
-        // Nếu người dùng tồn tại, thực hiện các bước tiếp theo (tạo mật khẩu mới và gửi email)
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(`${randomPassword}`, salt);
 
         try {
-            // Cập nhật mật khẩu mới cho người dùng
             await UserModel.findByIdAndUpdate(user._id, {
                 password: hashedPassword, isChangePassword: true,
             })
-
-
-            // Tạo nội dung email với mật khẩu mới
             const data = {
               from: `AppChat <${process.env.USERNAME_EMAIL}>`,
               to: email,
@@ -243,23 +237,18 @@ const forgotPassword = asyncHandle(async (req, res) => {
                 `,
             };
 
-            // Gửi email thông báo mật khẩu mới
             await handleSendMail(data)
-
-            // Phản hồi thành công
             res.status(200).json({
                 message: "Mật khẩu mới đã được gửi đến email của bạn thành công",
                 data: [],
             });
         } catch (error) {
-            // Xử lý lỗi nếu có
             res.status(500).json({
                 message: 'Không thể gửi email',
                 data: [],
             });
         }
     } else {
-        // Nếu người dùng không tồn tại
         res.status(401).json({
             message: "Người dùng không tồn tại",
         });
