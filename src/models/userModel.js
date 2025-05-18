@@ -26,6 +26,9 @@ const UserSchema = new mongoose.Schema({
         type: Date,
         default: Date.now(),
     },
+    QR: {
+        type: String
+    }
 });
 
 const UserModel = mongoose.model("users", UserSchema);

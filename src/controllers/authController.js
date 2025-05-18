@@ -178,17 +178,14 @@ const login = asyncHandle(async (req, res) => {
     const { email, password } = req.body;
 
     const existingUser = await UserModel.findOne({ email })
-
     if (!existingUser) {
         res.status(403).json({
             message: 'Người dùng không tồn tại!!!'
         })
         throw new Error('Người dùng không tồn tại');
-
     }
 
     const isMatchPassword = await bcrypt.compare(password, existingUser.password)
-
     if (!isMatchPassword) {
         res.status(401)
         throw new Error("Email hoặc Mật khẩu không đúng!");
@@ -255,9 +252,35 @@ const forgotPassword = asyncHandle(async (req, res) => {
     }
 });
 
+const createQR = asyncHandle(async (req, res) => {
+  const { email } = req.body;
+
+  // Kiểm tra xem người dùng có tồn tại không
+  const existingUser = await UserModel.findOne({ email });
+
+  if (!existingUser) {
+    return res.status(404).json({
+      message: 'Người dùng không tồn tại!',
+    });
+  }
+
+  // Nếu tồn tại thì tạo accessToken và trả về dữ liệu mã QR
+  const accessToken = await getJsonWebToken(email, existingUser._id);
+
+  return res.status(200).json({
+    message: 'Tạo mã QR thành công',
+    data: {
+      id: existingUser._id,
+      email: existingUser.email,
+      accessToken: accessToken,
+    },
+  });
+});
+
 module.exports = {
     register,
     login,
     verification,
-    forgotPassword
+    forgotPassword,
+    createQR
 }
